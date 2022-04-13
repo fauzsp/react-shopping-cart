@@ -34,11 +34,16 @@ const App = () => {
   if (error) return <div>Something went wrong</div>;
   console.log(data, isLoading, "checking data");
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>hello world</h1>
-      </header>
-    </div>
+      <Wrapper>
+        <Grid container spacing={3}>
+            {data?.map((elem) => {
+             return (<Grid item key={elem.id} xs={12} sm={4}>
+                <Items item={elem} handleAddToCart={handleAddToCart}/>
+              </Grid>
+             )
+            })}
+        </Grid>
+      </Wrapper>
   );
 };
 
