@@ -8,7 +8,7 @@ import AddShoppingCartIcon from "@material-ui/icons/AddShoppingCart";
 import Badge from "@material-ui/core/Badge";
 import { Wrapper } from "./App.styles";
 
-export type cartItemType = {
+export type CartItemType = {
   id: number;
   category: string;
   description: string;
@@ -18,32 +18,38 @@ export type cartItemType = {
   amount: number;
 };
 
-const getProducts = async (): Promise<cartItemType[]> => {
+const getProducts = async (): Promise<CartItemType[]> => {
   return await (await fetch("https://fakestoreapi.com/products")).json();
 };
 
 const App = () => {
-  const { data, isLoading, error } = useQuery<cartItemType[]>(
+  const [cartOpen, setCartOpen] = useState(false);
+  const [cartItem, setCartItem] = useState([] as CartItemType[]);
+  const { data, isLoading, error } = useQuery<CartItemType[]>(
     "products",
     getProducts
   );
   const getTotalItems = () => null;
-  const handleAddToCart = (clickedItem: cartItemType) => null;
+  const handleAddToCart = (clickedItem: CartItemType) => null;
   const handleRemoveFromCart = () => null;
   if (isLoading) return <LinearProgress />;
   if (error) return <div>Something went wrong</div>;
   console.log(data, isLoading, "checking data");
   return (
-      <Wrapper>
-        <Grid container spacing={3}>
-            {data?.map((elem) => {
-             return (<Grid item key={elem.id} xs={12} sm={4}>
-                <Items item={elem} handleAddToCart={handleAddToCart}/>
-              </Grid>
-             )
-            })}
-        </Grid>
-      </Wrapper>
+    <Wrapper>
+      <Drawer anchor="right" open={cartOpen} onClose={() => setCartOpen(false)}>
+        Cart goes here
+      </Drawer>
+      <Grid container spacing={3}>
+        {data?.map((elem) => {
+          return (
+            <Grid item key={elem.id} xs={12} sm={4}>
+              <Items item={elem} handleAddToCart={handleAddToCart} />
+            </Grid>
+          );
+        })}
+      </Grid>
+    </Wrapper>
   );
 };
 
