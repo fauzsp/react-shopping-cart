@@ -2,11 +2,12 @@ import { useState } from "react";
 import { useQuery } from "react-query";
 import Drawer from "@material-ui/core/Drawer";
 import Items from "./components/Items/Items";
+import Cart from "./components/Cart/Cart";
 import LinearProgress from "@material-ui/core/LinearProgress";
 import Grid from "@material-ui/core/Grid";
 import AddShoppingCartIcon from "@material-ui/icons/AddShoppingCart";
 import Badge from "@material-ui/core/Badge";
-import { Wrapper } from "./App.styles";
+import { Wrapper, StyleButton } from "./App.styles";
 
 export type CartItemType = {
   id: number;
@@ -24,27 +25,69 @@ const getProducts = async (): Promise<CartItemType[]> => {
 
 const App = () => {
   const [cartOpen, setCartOpen] = useState(false);
-  const [cartItem, setCartItem] = useState([] as CartItemType[]);
+  const [cartItems, setCartItems] = useState([] as CartItemType[]);
   const { data, isLoading, error } = useQuery<CartItemType[]>(
     "products",
     getProducts
   );
-  const getTotalItems = () => null;
-  const handleAddToCart = (clickedItem: CartItemType) => null;
-  const handleRemoveFromCart = () => null;
+  const getTotalItems = (items: CartItemType[]) => {
+    return items.reduce((accum: number, item) => (accum = item.amount), 0);
+  };
+  const handleAddToCart = (clickedItem: CartItemType) => {
+    setCartItems((prev) => {
+      const isItemInCart = prev.find((item) => item.id === clickedItem.id);
+      if (isItemInCart) {
+        return prev.map((item) =>
+          item.id === clickedItem.id
+            ? { ...item, amount: item.amount + 1 }
+            : item
+        );
+      }
+      return [...prev, { ...clickedItem, amount: 1 }];
+    });
+  };
+  const handleRemoveFromCart = (id: number) => {
+    setCartItems((prev) => {
+      return prev.reduce((accum, item) => {
+        if (item.id === id) {
+          if (item.amount === 1) return accum;
+          return [...accum, { ...item, amount: item.amount - 1 }];
+        } else {
+          return [...accum, item];
+        }
+      }, [] as CartItemType[]);
+    });
+  };
   if (isLoading) return <LinearProgress />;
   if (error) return <div>Something went wrong</div>;
   console.log(data, isLoading, "checking data");
   return (
     <Wrapper>
       <Drawer anchor="right" open={cartOpen} onClose={() => setCartOpen(false)}>
-        Cart goes here
+        <Cart
+          cartItems={cartItems}
+          addToCart={handleAddToCart}
+          removeFromCart={handleRemoveFromCart}
+        />
       </Drawer>
+      <StyleButton onClick={() => setCartOpen(true)}>
+        <Badge
+          overlap="rectangular"
+          badgeContent={getTotalItems(cartItems)}
+          color="error"
+        >
+          <AddShoppingCartIcon />
+        </Badge>
+      </StyleButton>
       <Grid container spacing={3}>
-        {data?.map((elem) => {
+        {data?.map((elem, index) => {
           return (
             <Grid item key={elem.id} xs={12} sm={4}>
-              <Items item={elem} handleAddToCart={handleAddToCart} />
+              <Items
+                key={index}
+                item={elem}
+                handleAddToCart={handleAddToCart}
+              />
             </Grid>
           );
         })}
